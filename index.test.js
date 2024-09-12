@@ -57,7 +57,32 @@ describe('index', () => {
         await action();
 
         expect(core.setFailed).toHaveBeenCalledTimes(1);
-        expect(core.setFailed).toHaveBeenCalledWith('Release git tag does not start with `v`, ie. `v1.2.3`.');
+        expect(core.setFailed).toHaveBeenCalledWith("Release git tag does not start with 'v', ie. 'v1.2.3'.");
+    });
+
+    test('should fail if release git tag does not start with "mobile-components_v"', async () => {
+        jest.spyOn(core, 'setFailed');
+        jest.spyOn(core, 'getInput').mockImplementation((val) => {
+            if (val === 'tag-prefix') {
+                return 'mobile-components';
+            }
+
+            return './package.json';
+        });
+
+        fs.readJSON.mockReturnValue({
+            version: '1.2.3',
+        });
+        github.context = generateGitHubRelease({
+            gitTag: 'something-else_v1.2.3',
+        });
+
+        await action();
+
+        expect(core.setFailed).toHaveBeenCalledTimes(1);
+        expect(core.setFailed).toHaveBeenCalledWith(
+            "Release git tag does not start with 'mobile-components_v', ie. 'mobile-components_v1.2.3'."
+        );
     });
 
     test('should fail if release git tag and package.json version do not match', async () => {
@@ -138,15 +163,30 @@ describe('index', () => {
         );
     });
 
-    test('should output version and no tag (aka. not prerelease)', async () => {
+    test.each([
+        {
+            inputTagPrefix: 'mobile-components',
+            tagPrefix: 'mobile-components_v',
+        },
+        {
+            tagPrefix: 'v',
+        },
+    ])('should output version and no tag (aka. not prerelease): %j', async ({tagPrefix, inputTagPrefix}) => {
         const version = '1.2.3';
 
         jest.spyOn(core, 'setOutput');
+        jest.spyOn(core, 'getInput').mockImplementation((val) => {
+            if (val === 'tag-prefix') {
+                return inputTagPrefix;
+            }
+
+            return './package.json';
+        });
         fs.readJSON.mockReturnValue({
             version,
         });
         github.context = generateGitHubRelease({
-            gitTag: `v${version}`,
+            gitTag: `${tagPrefix}${version}`,
         });
 
         await action();
@@ -156,16 +196,31 @@ describe('index', () => {
         expect(core.setOutput).toHaveBeenCalledWith('tag', '');
     });
 
-    test('should output version and tag (aka. prerelease)', async () => {
+    test.each([
+        {
+            inputTagPrefix: 'mobile-components',
+            tagPrefix: 'mobile-components_v',
+        },
+        {
+            tagPrefix: 'v',
+        },
+    ])('should output version and tag (aka. prerelease): %j', async ({tagPrefix, inputTagPrefix}) => {
         const tag = 'beta';
         const version = `1.2.3-${tag}.1`;
 
         jest.spyOn(core, 'setOutput');
+        jest.spyOn(core, 'getInput').mockImplementation((val) => {
+            if (val === 'tag-prefix') {
+                return inputTagPrefix;
+            }
+
+            return './package.json';
+        });
         fs.readJSON.mockReturnValue({
             version,
         });
         github.context = generateGitHubRelease({
-            gitTag: `v${version}`,
+            gitTag: `${tagPrefix}${version}`,
             prerelease: true,
         });
 

@@ -7,8 +7,11 @@ const dedent = require('dedent');
 const main = async () => {
     try {
         const {draft: isDraft, prerelease: isPrerelease, tag_name: gitTag} = github.context.payload.release;
-        const gitTagWithoutV = gitTag.slice(1);
-        const packageJson = await fs.readJson('./package.json');
+        const tagPrefix = core.getInput('tag-prefix');
+        const fullTagPrefix = tagPrefix ? `${tagPrefix}_v` : 'v';
+        const gitTagWithoutV = gitTag.slice(fullTagPrefix.length);
+        const packageJsonPath = core.getInput('package-path');
+        const packageJson = await fs.readJson(packageJsonPath);
         const packageJsonVersion = packageJson?.version;
 
         if (isDraft) {
@@ -23,8 +26,8 @@ const main = async () => {
             return;
         }
 
-        if (!gitTag.startsWith('v')) {
-            core.setFailed('Release git tag does not start with `v`, ie. `v1.2.3`.');
+        if (!gitTag.startsWith(fullTagPrefix)) {
+            core.setFailed(`Release git tag does not start with '${fullTagPrefix}', ie. '${fullTagPrefix}1.2.3'.`);
 
             return;
         }
