@@ -1,4 +1,4 @@
-name: 'GitHub Releases for Automated Package Publishing'
+name: 'GitHub Releases for Automated Package Publishing v2'
 description: 'GitHub Action to validate and extract GitHub release information, used for automated package publishing.'
 branding:
     icon: tag
