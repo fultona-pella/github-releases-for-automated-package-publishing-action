@@ -1,11 +1,18 @@
 name: 'GitHub Releases for Automated Package Publishing'
 description: 'GitHub Action to validate and extract GitHub release information, used for automated package publishing.'
 branding:
-    icon: 'tag'
-    color: 'green'
+    icon: tag
+    color: green
 runs:
-    using: 'node16'
-    main: 'dist/index.js'
+    using: node20
+    main: dist/index.js
+inputs:
+    package-path:
+        description: 'Path to package.json e.g: packages/mobile-components/package.json'
+        default: './package.json'
+    tag-prefix:
+        description: 'Prefix for the tag to publish, excluding the "v" e.g: "mobile-components" for "mobile-components_v1.3.1"'
+        default: ''
 outputs:
     tag:
         description: 'Version tag to publish (if it exists)'
